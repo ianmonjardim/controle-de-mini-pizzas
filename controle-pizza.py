@@ -20,7 +20,7 @@ def update_stock(flavor, quantity, operation):
             if operation == 'Entrada':
                 current_stock += row[3].value
             elif operation == 'Saída':
-                current_stock -= row[3].value
+                current_stock -= row[3].value  # Subtraído o valor da saída do estoque
 
     new_stock = current_stock + quantity if operation == 'Entrada' else current_stock - quantity
     sheet.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), operation, flavor, quantity, new_stock])
@@ -55,6 +55,48 @@ def clear_stock():
         wb.save('controle_pizza.xlsx')
         messagebox.showinfo('Sucesso', 'Todo o estoque foi apagado.')
 
+
+def check_stock():
+    try:
+        wb = load_workbook('controle_pizza.xlsx')
+        sheet = wb.active
+    except FileNotFoundError:
+        messagebox.showerror('Erro', 'O arquivo do controle de estoque não foi encontrado.')
+        return
+
+    # Dicionários para armazenar o estoque de cada sabor de pizza
+    stock_dict_presunto_queijo = {'presunto e queijo': 0}
+    stock_dict_calabresa = {'calabresa': 0}
+
+    # Percorrendo todas as linhas para calcular o estoque de cada sabor de pizza
+    for row in sheet.iter_rows(min_row=2, max_col=5):
+        flavor = row[2].value.strip().lower()
+        quantity = row[3].value
+        operation = row[1].value
+
+        if flavor == 'presunto e queijo':
+            if operation == 'Entrada':
+                stock_dict_presunto_queijo[flavor] += quantity
+            elif operation == 'Saída':
+                stock_dict_presunto_queijo[flavor] -= quantity
+        elif flavor == 'calabresa':
+            if operation == 'Entrada':
+                stock_dict_calabresa[flavor] += quantity
+            elif operation == 'Saída':
+                stock_dict_calabresa[flavor] -= quantity
+
+    # Calculando o total de cada sabor de pizza
+    total_presunto_queijo = stock_dict_presunto_queijo['presunto e queijo']
+    total_calabresa = stock_dict_calabresa['calabresa']
+
+    # Calculando o total geral
+    total_geral = total_presunto_queijo + total_calabresa
+
+    # Exibindo o total de estoque para cada sabor de pizza e o total geral
+    messagebox.showinfo('Estoque Atual', f'Total de mini pizzas de presunto e queijo: {total_presunto_queijo}\nTotal de mini pizzas de calabresa: {total_calabresa}\nTotal geral: {total_geral}.')
+
+
+
 def remove_item():
     flavor = entry_flavor.get().strip().lower()
     confirmation = messagebox.askyesno('Confirmação', f'Tem certeza de que deseja apagar todas as entradas/saídas de {flavor}?')
@@ -72,32 +114,46 @@ def remove_item():
 
 # Configuração da janela principal
 root = tk.Tk()
-root.title('Contole de Pizzas')
+root.title('Contole de Pizzas Julinho!')
+
+# Ícone de pizza
+pizza_icon = tk.PhotoImage(file='1404945.png')
+root.iconphoto(True, pizza_icon)
+
+# Cores e fontes
+bg_color = "#FFD700"  # Amarelo dourado
+button_color = "#CD5C5C"  # Vermelho escuro
+font_family = "Arial"
+font_size = 12
+
+root.configure(bg=bg_color)
 
 # Componentes da interface
-label_flavor = tk.Label(root, text='Sabor da Pizza:')
-label_flavor.grid(row=0, column=0, padx=10, pady=5)
+label_flavor = tk.Label(root, text='Sabor da Pizza:', bg=bg_color, font=(font_family, font_size))
+label_flavor.grid(row=0, column=0, padx=20, pady=10)
 
-entry_flavor = tk.Entry(root)
-entry_flavor.grid(row=0, column=1, padx=10, pady=5)
+entry_flavor = tk.Entry(root, width=30, font=(font_family, font_size))
+entry_flavor.grid(row=0, column=1, padx=20, pady=10)
 
-label_quantity = tk.Label(root, text='Quantidade:')
-label_quantity.grid(row=1, column=0, padx=10, pady=5)
+label_quantity = tk.Label(root, text='Quantidade:', bg=bg_color, font=(font_family, font_size))
+label_quantity.grid(row=1, column=0, padx=20, pady=10)
 
-entry_quantity = tk.Entry(root)
-entry_quantity.grid(row=1, column=1, padx=10, pady=5)
+entry_quantity = tk.Entry(root, width=30, font=(font_family, font_size))
+entry_quantity.grid(row=1, column=1, padx=20, pady=10)
 
-button_entry = tk.Button(root, text='Registrar Entrada', command=register_entry)
-button_entry.grid(row=2, column=0, padx=10, pady=5)
+button_entry = tk.Button(root, text='Registrar Entrada', command=register_entry, width=20, bg=button_color, font=(font_family, font_size))
+button_entry.grid(row=2, column=0, padx=20, pady=10)
 
-button_exit = tk.Button(root, text='Registrar Saída', command=register_exit)
-button_exit.grid(row=2, column=1, padx=10, pady=5)
+button_exit = tk.Button(root, text='Registrar Saída', command=register_exit, width=20, bg=button_color, font=(font_family, font_size))
+button_exit.grid(row=2, column=1, padx=20, pady=10)
 
-button_clear = tk.Button(root, text='Limpar Estoque', command=clear_stock)
-button_clear.grid(row=3, column=0, padx=10, pady=5)
+button_clear = tk.Button(root, text='Limpar Estoque', command=clear_stock, width=20, bg=button_color, font=(font_family, font_size))
+button_clear.grid(row=3, column=0, padx=20, pady=10)
 
-button_remove = tk.Button(root, text='Remover Item', command=remove_item)
-button_remove.grid(row=3, column=1, padx=10, pady=5)
+button_remove = tk.Button(root, text='Remover Item', command=remove_item, width=20, bg=button_color, font=(font_family, font_size))
+button_remove.grid(row=3, column=1, padx=20, pady=10)
 
+button_check_stock = tk.Button(root, text='Verificar Estoque', command=check_stock, width=40, bg=button_color, font=(font_family, font_size))
+button_check_stock.grid(row=4, column=0, columnspan=2, padx=20, pady=10)
 # Loop principal da interface
 root.mainloop()
